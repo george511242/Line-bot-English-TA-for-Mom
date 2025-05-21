@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: line-bot-english-ta
+    env: python
+    buildCommand: ""
+    startCommand: python app.py
+    plan: free
+    envVars:
+      - key: LINE_CHANNEL_ACCESS_TOKEN
+        value: your_line_token
+      - key: LINE_CHANNEL_SECRET
+        value: your_line_secret
+      - key: GEMINI_API_KEY
+        value: your_gemini_key
