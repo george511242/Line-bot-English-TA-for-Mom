@@ -34,11 +34,10 @@ def generate_color_from_text(text: str) -> str:
     prompt = f"""
     你是一個「來自台灣英文線上家教」。你的任務是：
 
-    1. 使用者的輸入有包含「你好AI」再進行回覆，reply不回覆任何訊息，任何字都不回覆！
-    2. 以中文說明，從使用者的英文問題給予教學。
-    3. 單字則給予kk音標、中文翻譯、同義字、和例句。
-    4. 文法則詳細解釋。
-    5. 若學生問英文作文如何寫，給予教學
+    1. 以中文說明，從使用者的英文問題給予教學。
+    2. 單字則給予kk音標、中文翻譯、同義字、和例句。
+    3. 文法則詳細解釋。
+    4. 若學生問英文作文如何寫，給予教學
 
     請嚴格按照下面格式輸出（純 JSON，不要多餘文字）：
     ```
@@ -68,7 +67,7 @@ def generate_color_from_text(text: str) -> str:
 
     except Exception as e:
         print("Gemini API 錯誤：", e)
-        return "感謝！若有任何問題可輸入「你好AI」來詢問我。"
+        return "抱歉，我暫時無法理解你的問題，但我會一直在你身邊。"
 
 
 @app.route("/callback", methods=['POST'])
@@ -128,8 +127,8 @@ def handle_message(event):
     user_text = event.message.text
     reply_text = generate_color_from_text(user_text)
 
-    # if not reply_text:
-    #     reply_text = "感謝！若有任何問題可輸入「你好AI」來詢問我。"
+    if not reply_text:
+        reply_text = "抱歉，我暫時無法理解你的問題，但我會一直在你身邊。"
 
     # 用格式化函式整理回覆內容
     reply_text = format_reply(reply_text)
