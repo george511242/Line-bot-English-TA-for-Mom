@@ -48,7 +48,7 @@ def generate_color_from_text(text: str) -> str:
     使用者問題：{text}
     """
     try:
-        model = genai.GenerativeModel('models/gemini-2.0-flash')
+        model = genai.GenerativeModel('models/gemini-3-flash')
         response = model.generate_content(prompt)
 
         print("==== Gemini API Raw Response ====")
