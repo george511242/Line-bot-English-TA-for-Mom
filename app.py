@@ -11,7 +11,7 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 
 # 【新增】引入 TypedDict 來定義 Gemini 回傳的 JSON 格式
-from typing import TypedDict
+from typing_extensions import TypedDict
 
 load_dotenv()
 
