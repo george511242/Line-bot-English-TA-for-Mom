@@ -10,6 +10,9 @@ import json
 import google.generativeai as genai
 from dotenv import load_dotenv
 
+# 【新增】引入 TypedDict 來定義 Gemini 回傳的 JSON 格式
+from typing import TypedDict
+
 load_dotenv()
 
 # 初始化 Flask 應用
@@ -25,6 +28,11 @@ handler = WebhookHandler(LINE_CHANNEL_SECRET)
 # 設定 Gemini API 金鑰
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=GEMINI_API_KEY)
+
+
+# 【新增】定義我們強烈要求的回傳格式 (確保 reply 必須是字串)
+class BotResponse(TypedDict):
+    reply: str
 
 
 def generate_color_from_text(text: str) -> str:
@@ -49,7 +57,15 @@ def generate_color_from_text(text: str) -> str:
     """
     try:
         model = genai.GenerativeModel('models/gemini-2.5-flash-lite')
-        response = model.generate_content(prompt)
+        
+        # 【修改重點 1】：加上 generation_config，從 API 底層鎖定 JSON 格式
+        response = model.generate_content(
+            prompt,
+            generation_config=genai.GenerationConfig(
+                response_mime_type="application/json",
+                response_schema=BotResponse
+            )
+        )
 
         print("==== Gemini API Raw Response ====")
         print(response)
@@ -58,16 +74,26 @@ def generate_color_from_text(text: str) -> str:
         # 取出真正的回覆文字
         content = response.candidates[0].content.parts[0].text.strip()
 
+        # 移除可能的 Markdown 標記
         if content.startswith("```"):
             content = content.replace("```json", "").replace("```", "").strip()
 
         result = json.loads(content)
+        reply_data = result.get("reply", "")
 
-        return result["reply"]
+        # 【修改重點 2】：雙重保險容錯機制
+        # 萬一 API 還是抽風回傳了字典，安全地將裡面的內容轉成純字串
+        if isinstance(reply_data, dict):
+            # 把字典裡面的所有文字抽出來合併
+            final_reply = "\n\n".join([str(value) for value in reply_data.values()])
+        else:
+            final_reply = str(reply_data)
+
+        return final_reply
 
     except Exception as e:
         print("Gemini API 錯誤：", e)
-        return "抱歉，我暫時無法理解你的問題，但我會一直在你身邊。"
+        return "抱歉，我暫時無法處理這個問題，請稍後再試一次。"
 
 
 @app.route("/callback", methods=['POST'])
@@ -86,6 +112,7 @@ def callback():
         abort(400)
 
     return 'OK'
+
 
 def format_reply(text: str) -> str:
     # 移除多餘的 Markdown 星號符號
@@ -139,7 +166,6 @@ def handle_message(event):
         event.reply_token,
         TextSendMessage(text=reply_text)
     )
-
 
 
 if __name__ == "__main__":
