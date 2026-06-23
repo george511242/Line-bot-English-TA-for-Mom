@@ -56,7 +56,7 @@ def generate_color_from_text(text: str) -> str:
     使用者問題：{text}
     """
     try:
-        model = genai.GenerativeModel('models/gemini-2.5-flash-lite')
+        model = genai.GenerativeModel('models/gemini-3-flash-preview')
         
         # 【修改重點 1】：加上 generation_config，從 API 底層鎖定 JSON 格式
         response = model.generate_content(
